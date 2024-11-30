@@ -165,10 +165,7 @@ class ZoomController extends Controller
             ]
         );
 
-        return response()->json([
-            'User_Data_From_Zoom'=>$userData,
-            'Zoom_Store_Data'=> $zData
-        ]);
+        return redirect('/');
     }
 
     function disconnectZoomApp() {
