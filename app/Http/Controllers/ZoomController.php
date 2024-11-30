@@ -136,6 +136,18 @@ class ZoomController extends Controller
         $data = $response->json();
         // Save access token, refresh token, etc., to the database (customize this as needed)
         // For example:
+
+        $userResponse = Http::withToken($data['access_token'])->get('https://api.zoom.us/v2/users/me');
+
+        // Debug response
+        if ($userResponse->failed()) {
+            return response()->json([
+                'message' => 'Failed to fetch Zoom user information',
+                'error' => $userResponse->json()
+            ], 500);
+        }
+
+        $userData = $userResponse->json();
         // User::find($state['user_id'])->update(['zoom_token' => $data['access_token']]);
         $zData = ZoomData::updateOrCreate(
             ['user_id' => $state['user_id']],
@@ -147,10 +159,10 @@ class ZoomController extends Controller
                 'token' => $data['access_token'],
                 'token_uri' => 'https://zoom.us/oauth/token',
                 'scopes' => $data['scope'], // Example: "meeting:read,user:write"
-                'zoom_user_id' => $data['id'], // Add based on the response
+                'zoom_user_id' => $userData['id'], // Add based on the response
             ]
         );
 
-        return $zData;
+        return $zData .'<pre> New'. $userData;
     }
 }
