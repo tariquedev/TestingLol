@@ -147,7 +147,7 @@ class ZoomController extends Controller
                 'token' => $data['access_token'],
                 'token_uri' => 'https://zoom.us/oauth/token',
                 'scopes' => $data['scope'], // Example: "meeting:read,user:write"
-                'zoom_user_id' => $data['user_id'], // Add based on the response
+                'zoom_user_id' => $data['id'], // Add based on the response
             ]
         );
 
