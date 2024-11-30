@@ -129,6 +129,6 @@ class ZoomController extends Controller
         // For example:
         User::find($state['user_id'])->update(['zoom_token' => $data['access_token']]);
 
-        return 'Zoom connected successfully!';
+        return $data;
     }
 }
