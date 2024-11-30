@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Http;
 
 class ZoomController extends Controller
 {
@@ -85,7 +87,7 @@ class ZoomController extends Controller
         $state = base64_encode(json_encode([
             'user_id' => Auth::id(),
             'scope' => 'zoom',
-            'return_url' => 'lol',
+            'return_url' => route('dashboard'),
         ]));
 
         $authUrl = env('ZOOM_AUTH_URL') . '?' . http_build_query([
@@ -105,28 +107,28 @@ class ZoomController extends Controller
         $state = json_decode(base64_decode($request->input('state')), true);
 
         if (!$code) {
-            return redirect()->route('dashboard')->with('error', 'Authorization failed');
+            return 'Authorization failed';
         }
 
         // Exchange code for access token
         $response = Http::asForm()->withBasicAuth(
-            config('app.ZOOM_CLIENT_ID'),
-            config('app.ZOOM_CLIENT_SECRET')
-        )->post(config('app.ZOOM_TOKEN_URL'), [
+            env('ZOOM_CLIENT_ID'),
+            env('ZOOM_CLIENT_SECRET')
+        )->post(env('ZOOM_TOKEN_URL'), [
             'grant_type' => 'authorization_code',
             'code' => $code,
-            'redirect_uri' => config('app.ZOOM_REDIRECT_URI'),
+            'redirect_uri' => env('ZOOM_REDIRECT_URI'),
         ]);
 
         if ($response->failed()) {
-            return redirect()->route('dashboard')->with('error', 'Failed to obtain access token');
+            return 'Failed to obtain access token';
         }
 
         $data = $response->json();
         // Save access token, refresh token, etc., to the database (customize this as needed)
         // For example:
-        // User::find($state['user_id'])->update(['zoom_token' => $data['access_token']]);
+        User::find($state['user_id'])->update(['zoom_token' => $data['access_token']]);
 
-        return redirect()->route('dashboard')->with('success', 'Zoom connected successfully!');
+        return 'Zoom connected successfully!';
     }
 }
