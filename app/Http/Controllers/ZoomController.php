@@ -137,7 +137,7 @@ class ZoomController extends Controller
         // Save access token, refresh token, etc., to the database (customize this as needed)
         // For example:
         // User::find($state['user_id'])->update(['zoom_token' => $data['access_token']]);
-        ZoomData::updateOrCreate(
+        $zData = ZoomData::updateOrCreate(
             ['user_id' => $state['user_id']],
             [
                 'client_id' => env('ZOOM_CLIENT_ID'),
@@ -151,6 +151,6 @@ class ZoomController extends Controller
             ]
         );
 
-        return $data;
+        return $zData;
     }
 }
