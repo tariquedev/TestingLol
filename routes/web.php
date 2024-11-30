@@ -3,9 +3,9 @@
 use App\Http\Controllers\ZoomController;
 use Illuminate\Support\Facades\Route;
 
-// Route::get('/', function () {
-//     return view('welcome');
-// });
+Route::get('/', function () {
+    return "You are hacked!";
+});
 
 // Route::get('/zoom/connect', [ZoomController::class, 'connect'])->name('zoom.connect');
 // Route::get('/zoom/callback', [ZoomController::class, 'callback'])->name('zoom.callback');
