@@ -183,14 +183,14 @@ class ZoomController extends Controller
             'Authorization' => "Basic $authHeader",
             'Content-Type' => 'application/x-www-form-urlencoded',
         ])->asForm()->post('https://zoom.us/oauth/revoke', [
-            'token' => auth()->user()->zoomConnect->accessToken, // Access token or refresh token to revoke
+            'token' => auth()->user()->zoomConnect->token, // Access token or refresh token to revoke
         ]);
 
         // Handle the response
         if ($response->ok()) {
             return "App successfully disconnected!";
         } else {
-            return "Error: " . $response->json()['message'];
+            return "Error";
         }
     }
 }
