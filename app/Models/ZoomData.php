@@ -6,5 +6,5 @@ use Illuminate\Database\Eloquent\Model;
 
 class ZoomData extends Model
 {
-    protected $gaurded;
+    protected $guarded = [];
 }
