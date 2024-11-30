@@ -163,6 +163,9 @@ class ZoomController extends Controller
             ]
         );
 
-        return $zData .'<pre> New'. $userData;
+        return response()->json([
+            'User_Data_From_Zoom'=>$userData,
+            'Zoom_Store_Data'=> $zData
+        ]);
     }
 }
