@@ -97,8 +97,10 @@ class ZoomController extends Controller
             'redirect_uri' => env('ZOOM_REDIRECT_URI'),
             'state' => $state,
         ]);
+
         return view('welcome', [
-            'authUrl' => $authUrl
+            'authUrl' => $authUrl,
+            'id_connected' => auth()->user()->zoomConnect == NULL ? false : true,
         ]);
     }
 
@@ -167,5 +169,28 @@ class ZoomController extends Controller
             'User_Data_From_Zoom'=>$userData,
             'Zoom_Store_Data'=> $zData
         ]);
+    }
+
+    function disconnectZoomApp() {
+        // Your Zoom OAuth credentials
+        $clientId = env('ZOOM_CLIENT_ID');
+        $clientSecret = env('ZOOM_CLIENT_SECRET');
+
+        // Encode client_id:client_secret as Base64
+        $authHeader = base64_encode("$clientId:$clientSecret");
+        // Make the revoke request
+        $response = Http::withHeaders([
+            'Authorization' => "Basic $authHeader",
+            'Content-Type' => 'application/x-www-form-urlencoded',
+        ])->asForm()->post('https://zoom.us/oauth/revoke', [
+            'token' => auth()->user()->zoomConnect->accessToken, // Access token or refresh token to revoke
+        ]);
+
+        // Handle the response
+        if ($response->ok()) {
+            return "App successfully disconnected!";
+        } else {
+            return "Error: " . $response->json()['message'];
+        }
     }
 }

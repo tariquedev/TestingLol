@@ -46,4 +46,8 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    function zoomConnect(){
+        return $this->hasOne(ZoomData::class, 'user_id');
+    }
 }

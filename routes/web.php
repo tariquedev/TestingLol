@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', [ZoomController::class, 'generateAuthLink'])->name('zoom.authLol');
 Route::get('/zoom/auth', [ZoomController::class, 'generateAuthLink'])->name('zoom.auth');
 Route::get('/zoom/callback', [ZoomController::class, 'handleCallback'])->name('zoom.callback');
+Route::get('/zoom/disconnect', [ZoomController::class, 'disconnectZoomApp'])->name('zoom.disconnect');
 
 Route::get('/dashboard', function () {
     return view('dashboard');
