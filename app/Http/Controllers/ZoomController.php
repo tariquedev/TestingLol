@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\ZoomData;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
@@ -111,13 +112,21 @@ class ZoomController extends Controller
         }
 
         // Exchange code for access token
-        $response = Http::asForm()->withBasicAuth(
-            env('ZOOM_CLIENT_ID'),
-            env('ZOOM_CLIENT_SECRET')
-        )->post(env('ZOOM_TOKEN_URL'), [
+        // $response = Http::asForm()->withBasicAuth(
+        //     env('ZOOM_CLIENT_ID'),
+        //     env('ZOOM_CLIENT_SECRET')
+        // )->post(env('ZOOM_TOKEN_URL'), [
+        //     'grant_type' => 'authorization_code',
+        //     'code' => $code,
+        //     'redirect_uri' => env('ZOOM_REDIRECT_URI'),
+        // ]);
+
+        $response = Http::asForm()->post('https://zoom.us/oauth/token', [
             'grant_type' => 'authorization_code',
             'code' => $code,
             'redirect_uri' => env('ZOOM_REDIRECT_URI'),
+            'client_id' => env('ZOOM_CLIENT_ID'),
+            'client_secret' => env('ZOOM_CLIENT_SECRET'),
         ]);
 
         if ($response->failed()) {
@@ -127,7 +136,20 @@ class ZoomController extends Controller
         $data = $response->json();
         // Save access token, refresh token, etc., to the database (customize this as needed)
         // For example:
-        User::find($state['user_id'])->update(['zoom_token' => $data['access_token']]);
+        // User::find($state['user_id'])->update(['zoom_token' => $data['access_token']]);
+        ZoomData::updateOrCreate(
+            ['user_id' => $state['user_id']],
+            [
+                'client_id' => env('ZOOM_CLIENT_ID'),
+                'client_secret' => env('ZOOM_CLIENT_SECRET'),
+                'is_connected' => true,
+                'refresh_token' => $data['refresh_token'],
+                'token' => $data['access_token'],
+                'token_uri' => 'https://zoom.us/oauth/token',
+                'scopes' => $data['scope'], // Example: "meeting:read,user:write"
+                'zoom_user_id' => $data['user_id'], // Add based on the response
+            ]
+        );
 
         return $data;
     }
