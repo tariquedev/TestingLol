@@ -185,7 +185,7 @@ class ZoomController extends Controller
         ])->asForm()->post('https://zoom.us/oauth/revoke', [
             'token' => auth()->user()->zoomConnect->token, // Access token or refresh token to revoke
         ]);
-
+        auth()->user()->zoomConnect->delete();
         // Handle the response
         if ($response->ok()) {
             return "App successfully disconnected!";
