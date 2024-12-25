@@ -1,28 +1,16 @@
 <?php
 
-use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\ZoomController;
+use App\Http\Controllers\MediaController;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Storage;
 
-
-// Route::get('/zoom/connect', [ZoomController::class, 'connect'])->name('zoom.connect');
-// Route::get('/zoom/callback', [ZoomController::class, 'callback'])->name('zoom.callback');
-// Route::post('/zoom/disconnect', [ZoomController::class, 'disconnect'])->name('zoom.disconnect');
-
-
-Route::get('/dashboard', function () {
-    return view('dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
-
-Route::middleware('auth')->group(function () {
-    Route::get('/', [ZoomController::class, 'generateAuthLink'])->name('zoom.authLol');
-    Route::get('/zoom/auth', [ZoomController::class, 'generateAuthLink'])->name('zoom.auth');
-    Route::get('/zoom/callback', [ZoomController::class, 'handleCallback'])->name('zoom.callback');
-    Route::get('/zoom/disconnect', [ZoomController::class, 'disconnectZoomApp'])->name('zoom.disconnect');
-
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+Route::get('/', function () {
+    return view('welcome');
 });
 
-require __DIR__.'/auth.php';
+Route::get('login', function() {
+    return response()->json(['message' => 'Unauthorized.'], 401);
+});
+
+Route::post('login', [ 'as' => 'login']);
+Route::get('media/{mediaId}/{fileName}', [MediaController::class, 'show'])->name('media.show');

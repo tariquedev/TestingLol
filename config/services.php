@@ -35,4 +35,21 @@ return [
         ],
     ],
 
+    'google' => [
+        'client_id'     => env('GOOGLE_CLIENT_ID'),
+        'client_secret' => env('GOOGLE_CLIENT_SECRET'),
+        'redirect'      => env('GOOGLE_AUTH_REDIRECT_URL'),
+        'calendar_redirect' => env('GOOGLE_CALENDAR_REDIRECT_URL'),
+    ],
+    'facebook'  => [
+        'client_id'     => env('FACEBOOK_CLIENT_ID'),
+        'client_secret' => env('FACEBOOK_CLIENT_SECRET'),
+        'redirect'      => env('FACEBOOK_AUTH_REDIRECT_URL'),
+    ],
+    'zoom'  => [
+        'client_id'     => env('ZOOM_CLIENT_ID'),
+        'client_secret' => env('ZOOM_CLIENT_SECRET'),
+        'redirect'      => env('ZOOM_REDIRECT_URL'),
+    ],
+
 ];
