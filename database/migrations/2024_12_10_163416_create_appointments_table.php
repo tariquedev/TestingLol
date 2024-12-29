@@ -17,8 +17,10 @@ return new class extends Migration
             $table->foreignId('product_id');
             $table->foreignId('booking_slot_id')->nullable();
             $table->enum('payment_status', ['pending', 'completed', 'failed'])->default('pending');
-            $table->string('stripe_payment_id'); // Stripe's payment intent ID
+            $table->string('charge_id')->nullable(); // Stripe's payment intent ID
             $table->decimal('amount', 10, 2); // Payment amount
+            $table->string('currency')->nullable(); // USD or AUD or EUR etc
+            $table->string('currency_symbol')->nullable(); // $ or €
             $table->timestamps();
         });
     }

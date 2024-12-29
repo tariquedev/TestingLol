@@ -136,11 +136,13 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 });
 // Appointment
+Route::get('/payment-intent', [AppointmentController::class, 'getPaymentIntent']);
 Route::post('/appointment', [AppointmentController::class, 'storeAppointment']);
 Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/get/my-appointments', [AppointmentController::class, 'getAppointments']);
     Route::get('/appointment/details/{slug}', [AppointmentController::class, 'singleAppointment']);
     Route::get('/orders', [AppointmentController::class, 'myOrders']);
+    Route::get('/customers', [AppointmentController::class, 'myCustomers']);
 });
 // Store Details
 Route::get('/{store_name}/product/{slug}', [StoreController::class, 'storeDetails']);

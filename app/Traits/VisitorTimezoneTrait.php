@@ -6,19 +6,21 @@ trait VisitorTimezoneTrait
 {
     private function getVisitorIp()
     {
-        if (!empty($_SERVER['HTTP_CLIENT_IP'])) {
+        if (!empty(request()->ip())) {
+            return request()->ip();
+        } elseif (!empty($_SERVER['HTTP_CLIENT_IP'])) {
             return $_SERVER['HTTP_CLIENT_IP'];
         } elseif (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
             return $_SERVER['HTTP_X_FORWARDED_FOR'];
         } else {
-            return $_SERVER['REMOT E_ADDR'];
+            return $_SERVER['REMOTE_ADDR'];
         }
     }
 
     public function getVisitorTimezone()
     {
         $ip = $this->getVisitorIp();
-        $apiUrl = "https://ip-api.com/json/{$ip}";
+        $apiUrl = "http://ip-api.com/json/{$ip}";
 
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $apiUrl);

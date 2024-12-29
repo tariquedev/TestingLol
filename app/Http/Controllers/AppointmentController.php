@@ -17,10 +17,23 @@ use Stripe\Stripe;
 use Illuminate\Support\Str;
 use App\Traits\VisitorTimezoneTrait;
 use Carbon\Carbon;
+use Stripe\SetupIntent;
 
 class AppointmentController extends Controller
 {
     use MeetingLinkGenerator, VisitorTimezoneTrait;
+
+    public function getPaymentIntent(Request $request)
+    {
+        Stripe::setApiKey(env("STRIPE_SECRET"));
+        $setupIntent = SetupIntent::create([]);
+        return response()->json([
+            'message'   => 'Client Secret',
+            'data'      => [
+                'client_secret'  => $setupIntent->client_secret
+            ]
+        ]);
+    }
 
     public function storeAppointment(Request $request){
 
@@ -40,7 +53,7 @@ class AppointmentController extends Controller
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 422);
         }
-        $visitorTimezone = $this->getVisitorTimezone();
+        $visitorTimezone = $request->visitor_timezone ?? $this->getVisitorTimezone($request->ipAddress);
 
         $product = Product::find($request->product_id);
 
@@ -94,13 +107,16 @@ class AppointmentController extends Controller
                 'confirm' => true,
             ]);
 
+            // return $chargeId = $paymentIntent;
             $appointment = Appointment::create([
                 'customer_id' => $customer->id,
                 'product_id' => $request->product_id,
                 'booking_slot_id' => $bookingSlot->id ?? null,
                 'payment_status' => 'completed',
-                'stripe_payment_id' => $paymentIntent->id,
+                'charge_id' => $paymentIntent->latest_charge,
                 'amount' => $request->amount,
+                'currency_symbol' => $product->user->currency_symbol,
+                'currency' => $product->user->currency,
             ]);
             if ($request->has('dynamic_fields')) {
                 foreach ($request->dynamic_fields as $field) {
@@ -213,7 +229,7 @@ class AppointmentController extends Controller
     public function myOrders(Request $request){
         $userId = auth()->user()->id;
 
-        $timezone = config('app.timezone'); // Get the app's configured timezone
+        $timezone = config('app.timezone');
 
         $startDate = $request->start_date
         ? Carbon::parse($request->start_date, $timezone)->startOfDay()->format('Y-m-d H:i:s')
@@ -240,9 +256,54 @@ class AppointmentController extends Controller
                     'title' => $order->product->title ?? null,
                     'name' => $order->customer->name ?? null,
                     'email' => $order->customer->email ?? null,
-                    'price' => $order->amount ?? null,
+                    'price' => $order->currency_symbol . $order->amount ?? null,
                     'order_date' => $order->created_at,
                 ];
+            }),
+            'pagination' => [
+                'total_items' => $orders->total(),
+                'items_per_page' => $orders->perPage(),
+                'current_page' => $orders->currentPage(),
+                'total_pages' => $orders->lastPage(),
+            ],
+        ]);
+    }
+    public function myCustomers(Request $request){
+        $userId = auth()->user()->id;
+
+        $timezone = config('app.timezone'); // Get the app's configured timezone
+
+        $startDate = $request->start_date
+        ? Carbon::parse($request->start_date, $timezone)->startOfDay()->format('Y-m-d H:i:s')
+        : now($timezone)->subDays(30)->startOfDay()->format('Y-m-d H:i:s');
+
+        $endDate = $request->end_date
+        ? Carbon::parse($request->end_date, $timezone)->endOfDay()->format('Y-m-d H:i:s')
+        : now($timezone)->endOfDay()->format('Y-m-d H:i:s');
+        $perPage = $request->get('per_page', 20);
+        $page = $request->get('page', 1);
+
+        $orders = Appointment::selectRaw(
+            'customer_id, COUNT(*) as total_purchases, SUM(amount) as total_spent'
+        )
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->whereHas('product', function ($query) use ($userId) {
+                $query->where('user_id', $userId);
+            })
+            ->groupBy('customer_id')
+            ->with(['customer:id,email,name']) // Load customer details
+            ->paginate($perPage, ['*'], 'page', $page);
+
+        return response()->json([
+            'message' => 'Customers fetched successfully',
+            'data' => $orders->map(function ($order) {
+                return [
+                    'customer_id' => $order->customer->id,
+                    'customer_name' => $order->customer->name ?? 'Unknown',
+                    'customer_email' => $order->customer->email ?? 'Unknown',
+                    'total_purchases' => $order->total_purchases,
+                    'total_spent' => $order->total_spent,
+                        ];
             }),
             'pagination' => [
                 'total_items' => $orders->total(),

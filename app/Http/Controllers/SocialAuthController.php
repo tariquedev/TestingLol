@@ -10,6 +10,7 @@ use Illuminate\Support\Str;
 use App\Transformers\UserTransformer;
 use App\Http\Resources\UserResource;
 use App\Models\Onboard;
+use Illuminate\Support\Facades\Log;
 
 class SocialAuthController extends Controller
 {
@@ -55,7 +56,7 @@ class SocialAuthController extends Controller
                 ->with(['code' => $code])
                 ->stateless()
                 ->user();
-
+        Log::info($authUser);
         $slug = Str::slug($authUser->name);
         $exists = User::where('username', $slug)->first();
 
@@ -72,6 +73,9 @@ class SocialAuthController extends Controller
                 'name'       => $authUser->name,
                 'image'      => $authUser->avatar,
                 'username'   => $exists ? $exists->username : $slug . Str::random(3)
+            ]);
+            $user->onboard()->updateOrCreate([], [
+                'email_verification' => $provider == 'google' ? true : false,
             ]);
         }
 
