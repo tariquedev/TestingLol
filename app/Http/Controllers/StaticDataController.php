@@ -2,8 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
+use Laravel\Socialite\Facades\Socialite;
+use Illuminate\Support\Str;
 
 class StaticDataController extends Controller
 {
@@ -64,5 +69,70 @@ class StaticDataController extends Controller
             'message' => 'All Product Types',
             'data' => $productTypes
         ]);
+    }
+
+    public function authRedirect($provider)
+    {
+        $url = Socialite::driver($provider)
+                    ->stateless()
+                    ->redirect()
+                    ->getTargetUrl();
+
+        return redirect($url);
+    }
+
+    /**
+     * Handle social auth
+     *
+     * @param   string  $provider
+     *
+     * @return  json
+     */
+    public function authCallback($provider, Request $request)
+    {
+        $payload = $request->payload;
+        if (!$payload) {
+            return response()->json(['error' => 'Payload not provided'], 400);
+        }
+        parse_str($payload, $parsedData);
+        $code = $parsedData['code'] ?? null;
+
+        $authUser = Socialite::driver($provider)
+                ->with(['code' => $code])
+                ->stateless()
+                ->user();
+        Log::info($authUser);
+        $slug = Str::slug($authUser->name);
+        $exists = User::where('username', $slug)->first();
+
+        $user = User::where('email', $authUser->email)->first();
+        if ($user) {
+            $user->onboard()->updateOrCreate([], [
+                'email_verification' => $provider == 'google' ? true : false,
+            ]);
+        }
+        else{
+            $user = User::create(['email' => $authUser->email],
+            [
+                'email'      => $authUser->email,
+                'name'       => $authUser->name,
+                'image'      => $authUser->avatar,
+                'username'   => $exists ? $exists->username : $slug . Str::random(3)
+            ]);
+            $user->onboard()->updateOrCreate([], [
+                'email_verification' => $provider == 'google' ? true : false,
+            ]);
+        }
+
+        Auth::login($user);
+
+        $user->load('onboard');
+
+        $userData = $user->toArray(request());
+
+        $userData['access_token'] = $user->createAuthToken();
+        $userData['token_type'] = 'Bearer';
+
+        return $userData;
     }
 }
