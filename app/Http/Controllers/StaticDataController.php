@@ -90,12 +90,12 @@ class StaticDataController extends Controller
      */
     public function authCallback($provider, Request $request)
     {
-        $payload = $request->payload;
-        if (!$payload) {
-            return response()->json(['error' => 'Payload not provided'], 400);
+        $code = $request->code;
+        if (!$code) {
+            return response()->json(['error' => 'code not provided'], 400);
         }
-        parse_str($payload, $parsedData);
-        $code = $parsedData['code'] ?? null;
+
+        $code = $request->code ?? null;
 
         $authUser = Socialite::driver($provider)
                 ->with(['code' => $code])
